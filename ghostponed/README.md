@@ -1,8 +1,10 @@
 # Ghostponed 🌙
 
-A cozy spooky to-do app with a garden-defense feel. Add tasks with deadlines; each gets a
-ghost that drifts toward your garden house as the deadline nears. Complete milestones to
-grow defensive plants and push ghosts back. Encouraging tone, recoverable consequences.
+An original "cozy courage" to-do app: a nervous-but-brave little guardian (**Pip**)
+protects its haunted home from the things it's been putting off. Each task is a ghost that
+drifts toward the house as its deadline nears; completing milestones pushes the ghost back.
+When it's too much, shelter in the greenhouse — *"Rest tonight. We'll face it together
+tomorrow."* Encouraging tone, recoverable consequences, all original art and characters.
 
 **Run it:** open `index.html` in a browser (or `python3 -m http.server` then visit the page).
 No build step, no backend. State saved in `localStorage`. v1 is frontend-only.
@@ -16,10 +18,10 @@ No build step, no backend. State saved in `localStorage`. v1 is frontend-only.
 | 3 | Ghost math | Deadline + milestone → ghost distance/position | `src/ghost.js` |
 | 4 | Shelter | "Overwhelmed today", 1 extension, smaller-step helper | `src/shelter.js` |
 | 5 | Timer | Wall-clock focus timer (reload-safe) | `src/timer.js` |
-| 6 | Artwork | Original SVG: house, 3 ghosts, 3 plant tiers, greenhouse | `src/art.js` |
+| 6 | Artwork | Original SVG: haunted house, guardian "Pip", 3 big ghosts, greenhouse | `src/art.js` |
 | 7 | UI | Scene render, task cards, toasts/undo, shelter flow | `src/ui.js` |
 | 8 | Bootstrap | Load, render, tick, visibility handling | `src/app.js` |
-| 9 | Shell | Markup + cozy-spooky theme | `index.html`, `styles.css` |
+| 9 | Shell | Markup + Kiro-purple/black spooky theme | `index.html`, `styles.css` |
 
 ## Core mechanics
 

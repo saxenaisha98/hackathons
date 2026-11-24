@@ -133,11 +133,15 @@ animation.
 
 ## 9. Original artwork (`art.js`)
 
-All SVG authored here, returned as strings/elements:
-- **House**: a small cottage with lit windows and a garden fence.
-- **Ghosts**: 3 variants (round sheet-ghost, lantern-ghost, wisp) with simple faces,
-  friendly rather than scary.
-- **Plants**: 3 growth tiers (sprout → bush → warding-bloom) drawn per plant slot.
+All SVG authored here (original "cozy courage" direction — no third-party IP):
+- **Haunted house**: a crooked, leaning cottage with a sagging roof and warm arched windows.
+- **Guardian (Pip)**: an original anxious-but-brave little creature that stands before the
+  home holding a tiny lantern-leaf; braver posture when progress is being made.
+- **Ghosts**: 3 larger variants (round, lantern, wisp) — surreal and friendly-spooky, not
+  scary. Faces shift from calm (far) to wide-eyed (near).
+- **Theme**: Kiro purple + near-black, uneasy purples and dusty pink, warm amber home-light.
+  (The earlier plant-growth row was removed; milestone progress now reads through ghost
+  push-back and Pip's bravery rather than a plant tier row.)
 - **Greenhouse**: glass-panel overlay for the shelter state.
 
 No external image/font assets; system font stack with a cozy fallback.

@@ -28,9 +28,9 @@ import {
   formatClock,
   DEFAULT_DURATION_MS,
 } from "./timer.js";
-import { houseSVG, ghostSVG, plantSVG, greenhouseSVG } from "./art.js";
+import { houseSVG, ghostSVG, guardianSVG, greenhouseSVG } from "./art.js";
 
-const GHOST_NAMES = ["Boo", "Lumen", "Wisp"];
+const GHOST_NAMES = ["Mope", "Flicker", "Drift"];
 
 export function createUI(ctx) {
   // ctx: { getState, setState, now } — now() returns the "effective now"
@@ -128,41 +128,29 @@ export function createUI(ctx) {
     trees.className = "scene-trees";
     el.scene.appendChild(trees);
 
-    // house (right side)
+    // haunted house (right side)
     const house = document.createElement("div");
     house.className = "scene-house";
     house.innerHTML = houseSVG();
     el.scene.appendChild(house);
 
-    // plants: grow with total milestones completed across active tasks
+    // the guardian, Pip — stands in front of the home. Braver when progress is happening.
     const activeTasks = s.tasks.filter((t) => !t.completed);
-    const totalDone = activeTasks.reduce(
-      (acc, t) => acc + progress(t).done,
-      0
-    );
-    const plantRow = document.createElement("div");
-    plantRow.className = "scene-plants";
-    const slots = 5;
-    for (let i = 0; i < slots; i++) {
-      const tier = Math.max(0, Math.min(3, totalDone - i >= 0 ? Math.min(3, totalDone - i * 1) : 0));
-      // simpler: distribute growth left-to-right
-      const t = Math.max(0, Math.min(3, totalDone - i));
-      const wrap = document.createElement("div");
-      wrap.className = "plant-slot";
-      wrap.innerHTML = plantSVG(t);
-      plantRow.appendChild(wrap);
-    }
-    el.scene.appendChild(plantRow);
+    const totalDone = activeTasks.reduce((acc, t) => acc + progress(t).done, 0);
+    const guardian = document.createElement("div");
+    guardian.className = "scene-guardian";
+    guardian.innerHTML = guardianSVG(totalDone > 0);
+    el.scene.appendChild(guardian);
 
-    // ghosts
+    // ghosts (bigger, surreal, friendly-spooky)
     activeTasks.forEach((task, idx) => {
       const dist = sheltered ? Math.max(0.5, distance(task, now)) : distance(task, now);
       const x = screenX(dist);
       const g = document.createElement("div");
       g.className = "scene-ghost";
       g.style.left = `${x}%`;
-      g.style.top = `${22 + (idx % 3) * 16}%`;
-      g.style.opacity = String(0.55 + 0.45 * (1 - dist));
+      g.style.top = `${14 + (idx % 3) * 18}%`;
+      g.style.opacity = String(0.6 + 0.4 * (1 - dist));
       const mood = dist; // far = calm
       g.innerHTML = ghostSVG(task.ghostVariant, mood);
       const label = document.createElement("div");
