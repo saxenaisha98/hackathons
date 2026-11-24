@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Ghostponed 🌙 — cozy spooky to-dos</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <header class="app-header">
+      <div class="brand">
+        <span class="brand-mark">🪔</span>
+        <h1>Ghostponed</h1>
+        <span class="tagline">tend your garden, soothe your ghosts</span>
+      </div>
+      <button id="overwhelmed-btn" class="ghost-btn">Overwhelmed today</button>
+    </header>
+
+    <main>
+      <section id="scene" class="scene" aria-label="Your garden at night"></section>
+
+      <div class="panels">
+        <section class="panel tasks-panel">
+          <h2>Tasks &amp; milestones</h2>
+          <form id="task-form" class="task-form" autocomplete="off">
+            <input id="task-title" type="text" placeholder="What's haunting your to-do list?" maxlength="80" />
+            <input id="task-deadline" type="date" aria-label="Deadline" />
+            <button type="submit" class="primary-btn">Add task</button>
+          </form>
+          <p id="task-error" class="form-error" role="alert"></p>
+          <div id="task-list" class="task-list"></div>
+        </section>
+
+        <section class="panel timer-panel">
+          <h2>Focus timer</h2>
+          <div id="timer-clock" class="timer-clock">25:00</div>
+          <select id="timer-task" class="timer-task" aria-label="Focus on which task"></select>
+          <div class="timer-controls">
+            <button id="timer-start" class="primary-btn">Start</button>
+            <button id="timer-pause" class="ghost-btn" disabled>Pause</button>
+            <button id="timer-reset" class="link-btn" disabled>Reset</button>
+          </div>
+          <p id="timer-status" class="timer-status">25 minutes of gentle focus.</p>
+        </section>
+      </div>
+    </main>
+
+    <div id="shelter-overlay" class="shelter-overlay" role="dialog" aria-modal="true"></div>
+    <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+    <script type="module" src="src/app.js"></script>
+  </body>
+</html>

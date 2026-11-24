@@ -1,9 +1,7 @@
-# Hackathon
+# Hackathons
 
 A collection of hackathon projects.
 
-## Projects
-
-- **[ghostponed/](./ghostponed)** — Ghostponed, a cozy spooky procrastination app with a
-  garden-defense feel. Add tasks with deadlines, break them into milestones, and push back
-  the ghosts creeping toward your garden house as deadlines approach.
+| Project | What it is | Stack | Status |
+|---------|-----------|-------|--------|
+| [ghostponed/](./ghostponed) | Cozy spooky procrastination app — tasks spawn ghosts that approach your garden house; complete milestones to push them back | Vanilla HTML/CSS/JS, inline SVG, localStorage | v1 (frontend only) |
