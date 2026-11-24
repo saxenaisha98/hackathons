@@ -149,3 +149,43 @@ export function greenhouseSVG() {
     <circle cx="60" cy="84" r="8" fill="#8fd0bf"/>
   </svg>`;
 }
+
+// Witch — shown in the empty state, drifting across a new moon on her broom.
+// Original design: a small hunched figure, pointy hat, trailing cloak, star sparkles.
+export function witchSVG() {
+  return `
+  <svg viewBox="0 0 120 80" class="art-witch" aria-hidden="true">
+    <!-- broom -->
+    <line x1="18" y1="54" x2="92" y2="40" stroke="#6b4a30" stroke-width="3" stroke-linecap="round"/>
+    <g stroke="#caa36a" stroke-width="1.5" stroke-linecap="round">
+      <line x1="92" y1="40" x2="104" y2="34"/>
+      <line x1="92" y1="40" x2="104" y2="40"/>
+      <line x1="92" y1="40" x2="104" y2="46"/>
+      <line x1="92" y1="40" x2="102" y2="50"/>
+    </g>
+    <!-- cloak -->
+    <path d="M30 52 Q40 28 54 30 Q66 32 64 52 Q50 46 40 54 Z" fill="#4a2f6e"/>
+    <!-- body + head -->
+    <circle cx="50" cy="30" r="8" fill="#9c7bbd"/>
+    <circle cx="47" cy="29" r="1.4" fill="#1b1033"/>
+    <path d="M44 33 q4 2 7 0" stroke="#4a335e" stroke-width="1.3" fill="none" stroke-linecap="round"/>
+    <!-- pointy hat -->
+    <path d="M38 22 L52 2 L60 24 Z" fill="#2a1f49"/>
+    <ellipse cx="49" cy="24" rx="16" ry="4" fill="#2a1f49"/>
+    <circle cx="52" cy="4" r="2" fill="#f6c45a"/>
+    <!-- trailing sparkles -->
+    <circle cx="22" cy="48" r="1.4" fill="#e79ec0" opacity="0.8"/>
+    <circle cx="14" cy="52" r="1.1" fill="#a78bda" opacity="0.7"/>
+    <circle cx="8" cy="50" r="0.9" fill="#f6c45a" opacity="0.6"/>
+  </svg>`;
+}
+
+// A drifting spirit particle (tiny wisp) used to add motion/atmosphere to the scene.
+export function spiritParticleSVG() {
+  return `<svg viewBox="0 0 20 24" aria-hidden="true">
+    <path d="M10 2 C5 2 3 7 3 12 L3 20 Q5 17 7 20 Q9 17 10 20 Q11 17 13 20 Q15 17 17 20 L17 12 C17 7 15 2 10 2 Z"
+          fill="#cbb9ec" opacity="0.5"/>
+    <circle cx="8" cy="10" r="1" fill="#2b1b40"/>
+    <circle cx="12" cy="10" r="1" fill="#2b1b40"/>
+  </svg>`;
+}

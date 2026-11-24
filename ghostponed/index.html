@@ -31,11 +31,23 @@
         </section>
 
         <section class="panel timer-panel">
-          <h2>Focus timer</h2>
-          <div id="timer-clock" class="timer-clock">25:00</div>
+          <h2>Witching-hour focus</h2>
+          <div class="cauldron">
+            <div class="cauldron-glow"></div>
+            <div class="cauldron-bubbles">
+              <span></span><span></span><span></span><span></span>
+            </div>
+            <div id="timer-clock" class="timer-clock">25:00</div>
+            <svg class="cauldron-pot" viewBox="0 0 160 120" aria-hidden="true">
+              <ellipse cx="80" cy="54" rx="58" ry="16" fill="#1a0f30"/>
+              <path d="M22 54 Q24 108 80 112 Q136 108 138 54 Z" fill="#241640"/>
+              <path d="M22 54 Q24 108 80 112 Q136 108 138 54 Z" fill="none" stroke="#6d28d9" stroke-width="2"/>
+              <ellipse cx="80" cy="54" rx="58" ry="16" fill="none" stroke="#8b5cf6" stroke-width="3"/>
+            </svg>
+          </div>
           <select id="timer-task" class="timer-task" aria-label="Focus on which task"></select>
           <div class="timer-controls">
-            <button id="timer-start" class="primary-btn">Start</button>
+            <button id="timer-start" class="primary-btn">Begin the brew</button>
             <button id="timer-pause" class="ghost-btn" disabled>Pause</button>
             <button id="timer-reset" class="link-btn" disabled>Reset</button>
           </div>

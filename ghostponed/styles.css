@@ -104,6 +104,47 @@ main { padding: 0 24px 40px; max-width: 1100px; margin: 0 auto; }
   border-radius: 50%;
   background: radial-gradient(circle at 36% 34%, #fff2e0, #e79ec0 70%, #b07aa0);
   box-shadow: 0 0 46px rgba(231,158,192,0.45); }
+/* new moon: thin eerie crescent for the empty state */
+.scene-moon.new-moon {
+  background: #0a0613;
+  box-shadow: inset -14px 2px 0 1px rgba(231,158,192,0.85),
+              0 0 36px rgba(167,139,218,0.35);
+}
+
+/* drifting fog */
+.scene-fog { position: absolute; inset: 0; pointer-events: none;
+  background:
+    radial-gradient(420px 120px at 20% 92%, rgba(167,139,218,0.10), transparent 70%),
+    radial-gradient(500px 140px at 70% 96%, rgba(139,92,246,0.10), transparent 70%);
+  background-size: 200% 100%;
+  animation: fog-drift 24s linear infinite;
+}
+@keyframes fog-drift { to { background-position: 200% 0, -200% 0; } }
+
+/* ambient spirit particles */
+.scene-particles { position: absolute; inset: 0; pointer-events: none; }
+.spirit-particle { position: absolute; bottom: -10%; width: 20px; opacity: 0.5;
+  animation: rise var(--dur, 10s) linear infinite; animation-delay: var(--delay, 0s); }
+.spirit-particle svg { width: 100%; height: auto; }
+@keyframes rise {
+  0% { transform: translateY(0) translateX(0); opacity: 0; }
+  15% { opacity: 0.55; }
+  85% { opacity: 0.4; }
+  100% { transform: translateY(-340px) translateX(24px); opacity: 0; }
+}
+
+/* witch + empty state */
+.scene-witch { position: absolute; top: 24%; width: 120px; left: -130px;
+  animation: witch-fly 16s linear infinite; z-index: 2; }
+.scene-witch svg { width: 100%; height: auto; }
+@keyframes witch-fly {
+  0% { left: -130px; top: 24%; transform: rotate(-4deg); }
+  50% { top: 16%; }
+  100% { left: 110%; top: 26%; transform: rotate(-6deg); }
+}
+.scene-empty-hint { position: absolute; bottom: 14px; left: 50%; transform: translateX(-50%);
+  color: var(--purple-dim); font-style: italic; font-size: 0.85rem; text-align: center;
+  background: #0b0710aa; padding: 4px 12px; border-radius: 999px; border: 1px solid #241a40; }
 .scene-trees { position: absolute; bottom: 44px; left: 0; right: 0; height: 90px;
   background:
     radial-gradient(18px 40px at 4% 100%, #140a26 70%, transparent 71%),
@@ -115,17 +156,47 @@ main { padding: 0 24px 40px; max-width: 1100px; margin: 0 auto; }
 .scene-house svg { width: 100%; height: auto; }
 .scene-guardian { position: absolute; right: 20%; bottom: 10px; width: 78px; z-index: 3; }
 .scene-guardian svg { width: 100%; height: auto; animation: bob 5s ease-in-out infinite; }
+.scene-guardian.calm { right: 12%; }
 @keyframes bob { 50% { transform: translateY(-4px); } }
 
-/* ghosts — bigger now */
-.scene-ghost { position: absolute; width: 92px; transition: left 0.9s ease, opacity 0.6s ease;
-  transform: translate(-50%, 0); z-index: 2; }
+/* ghosts — bigger, and they wander the whole scene */
+.scene-ghost { position: absolute; width: 92px; z-index: 2;
+  left: var(--anchor-x, 40%); top: var(--lane-y, 20%);
+  transform: translate(-50%, 0); }
 .scene-ghost svg { width: 100%; height: auto;
-  animation: float 4.5s ease-in-out infinite;
-  filter: drop-shadow(0 0 14px rgba(167, 139, 218, 0.4)); }
-.scene-ghost.at-house svg { animation: float 2s ease-in-out infinite;
-  filter: drop-shadow(0 0 16px rgba(224, 106, 138, 0.5)); }
-@keyframes float { 50% { transform: translateY(-10px); } }
+  filter: drop-shadow(0 0 14px rgba(167, 139, 218, 0.45));
+  animation: bob-ghost 4.5s ease-in-out infinite; }
+@keyframes bob-ghost { 50% { transform: translateY(-6px) rotate(-2deg); } }
+
+/* the container wanders along one of four looping paths; radius + speed set per ghost */
+.scene-ghost.wander { animation: var(--dur, 12s) ease-in-out infinite; animation-delay: var(--delay, 0s); }
+.scene-ghost.path-0 { animation-name: wander-0; }
+.scene-ghost.path-1 { animation-name: wander-1; }
+.scene-ghost.path-2 { animation-name: wander-2; }
+.scene-ghost.path-3 { animation-name: wander-3; }
+@keyframes wander-0 {
+  0%,100% { transform: translate(-50%, 0); }
+  25% { transform: translate(calc(-50% + var(--rx)), calc(-1 * var(--ry))); }
+  50% { transform: translate(calc(-50% + var(--rx) * 0.4), calc(var(--ry) * 0.8)); }
+  75% { transform: translate(calc(-50% - var(--rx)), calc(-0.5 * var(--ry))); }
+}
+@keyframes wander-1 {
+  0%,100% { transform: translate(-50%, 0); }
+  30% { transform: translate(calc(-50% - var(--rx)), calc(var(--ry))); }
+  60% { transform: translate(calc(-50% + var(--rx)), calc(-1 * var(--ry))); }
+}
+@keyframes wander-2 {
+  0%,100% { transform: translate(-50%, 0) rotate(0deg); }
+  20% { transform: translate(calc(-50% + var(--rx)), calc(var(--ry) * 0.6)) rotate(3deg); }
+  50% { transform: translate(calc(-50% - var(--rx) * 0.6), calc(-1 * var(--ry))) rotate(-3deg); }
+  80% { transform: translate(calc(-50% + var(--rx) * 0.3), calc(var(--ry))) rotate(2deg); }
+}
+@keyframes wander-3 {
+  0%,100% { transform: translate(-50%, 0); }
+  33% { transform: translate(calc(-50% - var(--rx)), calc(-1 * var(--ry))); }
+  66% { transform: translate(calc(-50% + var(--rx) * 0.8), calc(var(--ry) * 0.9)); }
+}
+.scene-ghost.at-house svg { filter: drop-shadow(0 0 18px rgba(224, 106, 138, 0.6)); }
 .ghost-label { font-size: 0.64rem; text-align: center; color: var(--purple-dim);
   background: #0b0710cc; border: 1px solid #241a40; border-radius: 6px; padding: 1px 5px;
   margin-top: 2px; white-space: nowrap; max-width: 130px; overflow: hidden; text-overflow: ellipsis; }
@@ -168,13 +239,48 @@ input:focus, select:focus { outline: 2px solid var(--purple); }
 .task-actions { display: flex; gap: 8px; align-items: center; margin-top: 10px; }
 .done-heading { color: var(--sage); font-size: 0.95rem; margin: 10px 0 2px; }
 
-/* timer */
-.timer-clock { font-size: 3rem; font-weight: 700; text-align: center; letter-spacing: 2px;
-  color: var(--purple); margin: 6px 0; font-variant-numeric: tabular-nums;
-  text-shadow: 0 0 22px rgba(139,92,246,0.4); }
+/* spooky cauldron timer */
+.cauldron { position: relative; height: 150px; margin: 4px auto 14px; max-width: 220px; }
+.cauldron-pot { position: absolute; bottom: 0; left: 50%; transform: translateX(-50%);
+  width: 180px; height: auto; z-index: 1;
+  filter: drop-shadow(0 0 18px rgba(109,40,217,0.5)); }
+.cauldron-glow { position: absolute; left: 50%; bottom: 46px; transform: translateX(-50%);
+  width: 120px; height: 70px; border-radius: 50%;
+  background: radial-gradient(circle, rgba(139,92,246,0.7), rgba(231,158,192,0.25) 55%, transparent 72%);
+  filter: blur(6px); animation: glow-pulse 3s ease-in-out infinite; z-index: 2; }
+@keyframes glow-pulse { 50% { opacity: 0.6; transform: translateX(-50%) scale(1.08); } }
+.timer-clock { position: absolute; left: 50%; bottom: 58px; transform: translateX(-50%);
+  z-index: 3; font-size: 2.3rem; font-weight: 700; letter-spacing: 2px; color: #fff;
+  font-variant-numeric: tabular-nums; text-shadow: 0 0 18px rgba(139,92,246,0.9), 0 0 6px rgba(231,158,192,0.8); }
+.cauldron-bubbles { position: absolute; left: 50%; bottom: 60px; transform: translateX(-50%);
+  width: 80px; height: 40px; z-index: 2; }
+.cauldron-bubbles span { position: absolute; bottom: 0; width: 8px; height: 8px; border-radius: 50%;
+  background: rgba(167,139,218,0.8); opacity: 0; }
+.cauldron-bubbles span:nth-child(1) { left: 18%; animation: bubble 3.4s ease-in infinite; }
+.cauldron-bubbles span:nth-child(2) { left: 42%; width: 6px; height: 6px; animation: bubble 2.8s ease-in infinite 0.6s; }
+.cauldron-bubbles span:nth-child(3) { left: 62%; animation: bubble 3.9s ease-in infinite 1.1s; }
+.cauldron-bubbles span:nth-child(4) { left: 78%; width: 5px; height: 5px; animation: bubble 3.1s ease-in infinite 1.8s; }
+@keyframes bubble { 0% { transform: translateY(0) scale(0.6); opacity: 0; }
+  30% { opacity: 0.9; } 100% { transform: translateY(-34px) scale(1.1); opacity: 0; } }
+/* speed everything up while brewing */
+.cauldron.brewing .cauldron-glow { animation-duration: 1.4s; }
+.cauldron.brewing .cauldron-bubbles span { animation-duration: 1.6s !important; }
 .timer-task { width: 100%; margin-bottom: 12px; }
 .timer-controls { display: flex; gap: 8px; justify-content: center; }
 .timer-status { text-align: center; color: var(--purple-dim); font-size: 0.85rem; margin: 12px 0 0; }
+
+/* intruder ghost that peeks while naming a task */
+.task-form { position: relative; }
+.intruder-ghost { position: absolute; right: -4px; top: -78px; width: 70px; z-index: 5;
+  pointer-events: none; animation: intrude 0.5s ease-out; }
+.intruder-ghost svg { width: 100%; height: auto;
+  filter: drop-shadow(0 0 12px rgba(167,139,218,0.6)); animation: bob-ghost 3s ease-in-out infinite; }
+.intruder-ghost.leaving { animation: intrude-out 0.4s ease-in forwards; }
+.intruder-speak { position: absolute; top: 8px; right: 74px; white-space: nowrap;
+  background: #1a1030; border: 1px solid #3a2b5e; color: var(--purple-dim);
+  font-size: 0.72rem; padding: 3px 8px; border-radius: 10px; }
+@keyframes intrude { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes intrude-out { to { opacity: 0; transform: translateY(-14px) translateX(20px); } }
 
 /* shelter overlay — warm, safe, the emotional center */
 .shelter-overlay { position: fixed; inset: 0; display: none; align-items: center; justify-content: center;
@@ -206,6 +312,11 @@ input:focus, select:focus { outline: 2px solid var(--purple); }
   .scene-house { width: 150px; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .scene-ghost svg, .scene-guardian svg, .scene.pulse { animation: none !important; }
+  .scene-ghost, .scene-ghost svg, .scene-guardian svg, .scene.pulse,
+  .scene-fog, .spirit-particle, .scene-witch, .cauldron-glow,
+  .cauldron-bubbles span, .intruder-ghost, .intruder-ghost svg {
+    animation: none !important;
+  }
   .scene-ghost { transition: none; }
+  .spirit-particle, .cauldron-bubbles span { opacity: 0.4; }
 }

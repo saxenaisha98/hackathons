@@ -28,7 +28,14 @@ import {
   formatClock,
   DEFAULT_DURATION_MS,
 } from "./timer.js";
-import { houseSVG, ghostSVG, guardianSVG, greenhouseSVG } from "./art.js";
+import {
+  houseSVG,
+  ghostSVG,
+  guardianSVG,
+  greenhouseSVG,
+  witchSVG,
+  spiritParticleSVG,
+} from "./art.js";
 
 const GHOST_NAMES = ["Mope", "Flicker", "Drift"];
 
@@ -50,6 +57,7 @@ export function createUI(ctx) {
     timerPause: document.getElementById("timer-pause"),
     timerReset: document.getElementById("timer-reset"),
     timerStatus: document.getElementById("timer-status"),
+    cauldron: document.querySelector(".cauldron"),
     toast: document.getElementById("toast"),
   };
 
@@ -115,18 +123,41 @@ export function createUI(ctx) {
 
     el.scene.innerHTML = "";
 
-    // night layers
+    // atmosphere layers
     const sky = document.createElement("div");
     sky.className = "scene-sky";
     el.scene.appendChild(sky);
 
+    const activeTasks = s.tasks.filter((t) => !t.completed);
+    const totalDone = activeTasks.reduce((acc, t) => acc + progress(t).done, 0);
+
+    // moon: full-ish normally, a thin "new moon" crescent in the empty state
     const moon = document.createElement("div");
-    moon.className = "scene-moon";
+    moon.className = activeTasks.length === 0 ? "scene-moon new-moon" : "scene-moon";
     el.scene.appendChild(moon);
 
     const trees = document.createElement("div");
     trees.className = "scene-trees";
     el.scene.appendChild(trees);
+
+    // drifting fog / mist
+    const fog = document.createElement("div");
+    fog.className = "scene-fog";
+    el.scene.appendChild(fog);
+
+    // floating spirit particles for ambient motion
+    const particles = document.createElement("div");
+    particles.className = "scene-particles";
+    for (let i = 0; i < 6; i++) {
+      const p = document.createElement("div");
+      p.className = "spirit-particle";
+      p.style.left = `${8 + i * 15}%`;
+      p.style.setProperty("--delay", `${i * 1.7}s`);
+      p.style.setProperty("--dur", `${9 + (i % 4) * 2}s`);
+      p.innerHTML = spiritParticleSVG();
+      particles.appendChild(p);
+    }
+    el.scene.appendChild(particles);
 
     // haunted house (right side)
     const house = document.createElement("div");
@@ -134,23 +165,51 @@ export function createUI(ctx) {
     house.innerHTML = houseSVG();
     el.scene.appendChild(house);
 
+    // EMPTY STATE: witch drifting across the new moon
+    if (activeTasks.length === 0) {
+      const witch = document.createElement("div");
+      witch.className = "scene-witch";
+      witch.innerHTML = witchSVG();
+      el.scene.appendChild(witch);
+
+      const guardianEmpty = document.createElement("div");
+      guardianEmpty.className = "scene-guardian calm";
+      guardianEmpty.innerHTML = guardianSVG(true);
+      el.scene.appendChild(guardianEmpty);
+
+      const hint = document.createElement("div");
+      hint.className = "scene-empty-hint";
+      hint.textContent = "A quiet, haunted night. Add a task to call forth its ghost.";
+      el.scene.appendChild(hint);
+
+      if (sheltered) el.scene.classList.add("sheltered");
+      else el.scene.classList.remove("sheltered");
+      return;
+    }
+
     // the guardian, Pip — stands in front of the home. Braver when progress is happening.
-    const activeTasks = s.tasks.filter((t) => !t.completed);
-    const totalDone = activeTasks.reduce((acc, t) => acc + progress(t).done, 0);
     const guardian = document.createElement("div");
     guardian.className = "scene-guardian";
     guardian.innerHTML = guardianSVG(totalDone > 0);
     el.scene.appendChild(guardian);
 
-    // ghosts (bigger, surreal, friendly-spooky)
+    // ghosts (bigger, surreal) — each wanders on its own looping path. The deadline
+    // distance sets how close the wander-band sits to the house (near = more intrusive).
     activeTasks.forEach((task, idx) => {
       const dist = sheltered ? Math.max(0.5, distance(task, now)) : distance(task, now);
-      const x = screenX(dist);
+      const baseX = screenX(dist);
       const g = document.createElement("div");
-      g.className = "scene-ghost";
-      g.style.left = `${x}%`;
-      g.style.top = `${14 + (idx % 3) * 18}%`;
+      g.className = "scene-ghost wander";
+      // anchor the wander band around the deadline-driven x, with vertical lane per ghost
+      g.style.setProperty("--anchor-x", `${baseX}%`);
+      g.style.setProperty("--lane-y", `${12 + (idx % 3) * 20}%`);
+      g.style.setProperty("--rx", `${7 + (idx % 3) * 3}%`);   // horizontal roam radius
+      g.style.setProperty("--ry", `${6 + (idx % 2) * 4}%`);   // vertical roam radius
+      g.style.setProperty("--dur", `${11 + (idx % 5) * 2.5}s`); // each ghost its own speed
+      g.style.setProperty("--delay", `${idx * -2.3}s`);
       g.style.opacity = String(0.6 + 0.4 * (1 - dist));
+      // pick one of 4 wander paths so ghosts cross over the whole scene, not one spot
+      g.classList.add(`path-${idx % 4}`);
       const mood = dist; // far = calm
       g.innerHTML = ghostSVG(task.ghostVariant, mood);
       const label = document.createElement("div");
@@ -406,15 +465,16 @@ export function createUI(ctx) {
     });
 
     const running = snap && !snap.paused;
-    el.timerStart.textContent = snap ? (snap.paused ? "Resume" : "Running…") : "Start";
+    el.timerStart.textContent = snap ? (snap.paused ? "Resume" : "Brewing…") : "Begin the brew";
     el.timerStart.disabled = running;
     el.timerPause.disabled = !running;
     el.timerReset.disabled = !snap;
+    if (el.cauldron) el.cauldron.classList.toggle("brewing", Boolean(running));
     el.timerStatus.textContent = snap
       ? snap.paused
-        ? "Paused — pick it up whenever."
-        : "Focusing. One small step at a time."
-      : "25 minutes of gentle focus.";
+        ? "The brew rests — stir it again whenever."
+        : "The cauldron bubbles. One small step at a time."
+      : "25 minutes of witching-hour focus.";
   }
 
   // ---------- shelter ----------
@@ -548,8 +608,31 @@ export function createUI(ctx) {
   }
 
   // ---------- events ----------
+  // A ghost drifts over to peek while you're naming a new task (playful "intrusion").
+  function showIntruder() {
+    if (document.getElementById("intruder-ghost")) return;
+    const ghost = document.createElement("div");
+    ghost.id = "intruder-ghost";
+    ghost.className = "intruder-ghost";
+    const variant = ctx.getState().tasks.length % 3;
+    ghost.innerHTML =
+      ghostSVG(variant, 0.2) +
+      `<div class="intruder-speak">ooOOoo… what's this one?</div>`;
+    el.taskForm.appendChild(ghost);
+  }
+  function hideIntruder() {
+    const g = document.getElementById("intruder-ghost");
+    if (g) {
+      g.classList.add("leaving");
+      setTimeout(() => g.remove(), 450);
+    }
+  }
+  el.taskTitle.addEventListener("focus", showIntruder);
+  el.taskTitle.addEventListener("blur", () => setTimeout(hideIntruder, 150));
+
   el.taskForm.addEventListener("submit", (e) => {
     e.preventDefault();
+    hideIntruder();
     el.taskError.textContent = "";
     const title = el.taskTitle.value;
     const dateVal = el.taskDeadline.value;
