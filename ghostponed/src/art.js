@@ -1,6 +1,6 @@
 // art.js — original SVG artwork for Ghostponed.
-// "Cozy courage" direction: a haunted-but-warm home, an anxious-brave guardian, and
-// surreal friendly-spooky ghosts. Uneasy purples + dusty pink, warm yellow window light.
+// Original haunted-but-warm scenery: a crooked home, a flying witch, and surreal
+// friendly-spooky ghosts. Uneasy purples + dusty pink, warm yellow window light.
 // All characters/scenery are original and authored here. No external assets, no IP.
 
 // The haunted house: crooked cottage, sagging roof, glowing warm windows against the dark.
@@ -40,40 +40,6 @@ export function houseSVG() {
     <path d="M78 172 v-26 q12 -12 24 0 v26 z" fill="#1f1738"/>
     <path d="M90 146 v26" stroke="#f6c45a" stroke-width="2" opacity="0.5"/>
     <circle cx="96" cy="160" r="1.8" fill="#f6c45a"/>
-  </svg>`;
-}
-
-// Original guardian: "Pip" — a small, round, anxious-but-brave creature with big eyes,
-// little ears, and a tiny lantern-leaf it holds up against the dark. Not from any show.
-export function guardianSVG(brave = false) {
-  // brave=true when progress is being made: Pip stands a touch taller, braver eyes.
-  const browY = brave ? 16 : 19;
-  return `
-  <svg viewBox="0 0 80 96" class="art-guardian" aria-hidden="true">
-    <!-- shadow -->
-    <ellipse cx="40" cy="90" rx="20" ry="4" fill="#000" opacity="0.3"/>
-    <!-- ears -->
-    <path d="M24 30 C18 14 30 10 32 24 Z" fill="#6b4a7a"/>
-    <path d="M56 30 C62 14 50 10 48 24 Z" fill="#6b4a7a"/>
-    <!-- body -->
-    <ellipse cx="40" cy="58" rx="24" ry="28" fill="#7b5a9a"/>
-    <ellipse cx="40" cy="64" rx="16" ry="18" fill="#9c7bbd"/>
-    <!-- big worried-but-determined eyes -->
-    <circle cx="31" cy="50" r="7" fill="#fff"/>
-    <circle cx="49" cy="50" r="7" fill="#fff"/>
-    <circle cx="32" cy="51" r="3.4" fill="#1b1033"/>
-    <circle cx="48" cy="51" r="3.4" fill="#1b1033"/>
-    <circle cx="33" cy="49" r="1.1" fill="#fff"/>
-    <circle cx="49" cy="49" r="1.1" fill="#fff"/>
-    <!-- brows: angle shifts with bravery -->
-    <path d="M26 ${browY} q5 -3 10 1" stroke="#4a335e" stroke-width="2" fill="none" stroke-linecap="round" transform="translate(0,28)"/>
-    <path d="M44 ${browY + 2} q5 -4 10 -1" stroke="#4a335e" stroke-width="2" fill="none" stroke-linecap="round" transform="translate(0,28)"/>
-    <!-- tiny mouth -->
-    <path d="M36 62 q4 3 8 0" stroke="#4a335e" stroke-width="2" fill="none" stroke-linecap="round"/>
-    <!-- a little lantern-leaf held up -->
-    <line x1="60" y1="60" x2="66" y2="46" stroke="#5a4478" stroke-width="2.5"/>
-    <circle cx="67" cy="42" r="5" fill="#f6c45a"/>
-    <circle cx="67" cy="42" r="8" fill="#f6c45a" opacity="0.25"/>
   </svg>`;
 }
 

@@ -11,7 +11,7 @@ import {
   removeTask,
   saveState,
 } from "./state.js";
-import { distance, screenX, atHouse, HORIZON_MS } from "./ghost.js";
+import { distance, atHouse } from "./ghost.js";
 import {
   enterShelter,
   isSheltered,
@@ -31,7 +31,6 @@ import {
 import {
   houseSVG,
   ghostSVG,
-  guardianSVG,
   greenhouseSVG,
   witchSVG,
   spiritParticleSVG,
@@ -57,7 +56,6 @@ export function createUI(ctx) {
     timerPause: document.getElementById("timer-pause"),
     timerReset: document.getElementById("timer-reset"),
     timerStatus: document.getElementById("timer-status"),
-    cauldron: document.querySelector(".cauldron"),
     toast: document.getElementById("toast"),
   };
 
@@ -165,17 +163,12 @@ export function createUI(ctx) {
     house.innerHTML = houseSVG();
     el.scene.appendChild(house);
 
-    // EMPTY STATE: witch drifting across the new moon
+    // EMPTY STATE: a witch flies across the new moon, continuously.
     if (activeTasks.length === 0) {
       const witch = document.createElement("div");
       witch.className = "scene-witch";
       witch.innerHTML = witchSVG();
       el.scene.appendChild(witch);
-
-      const guardianEmpty = document.createElement("div");
-      guardianEmpty.className = "scene-guardian calm";
-      guardianEmpty.innerHTML = guardianSVG(true);
-      el.scene.appendChild(guardianEmpty);
 
       const hint = document.createElement("div");
       hint.className = "scene-empty-hint";
@@ -187,29 +180,23 @@ export function createUI(ctx) {
       return;
     }
 
-    // the guardian, Pip — stands in front of the home. Braver when progress is happening.
-    const guardian = document.createElement("div");
-    guardian.className = "scene-guardian";
-    guardian.innerHTML = guardianSVG(totalDone > 0);
-    el.scene.appendChild(guardian);
-
-    // ghosts (bigger, surreal) — each wanders on its own looping path. The deadline
-    // distance sets how close the wander-band sits to the house (near = more intrusive).
+    // ghosts (bigger, surreal) — each drifts continuously all the way across the window,
+    // left to right, then loops. Deadline distance sets the SPEED (closer deadline = the
+    // ghost sweeps faster and looms larger) and opacity, keeping the task mechanic alive.
+    // Vertical lanes sit well below the moon so nothing collides with it.
     activeTasks.forEach((task, idx) => {
       const dist = sheltered ? Math.max(0.5, distance(task, now)) : distance(task, now);
-      const baseX = screenX(dist);
       const g = document.createElement("div");
-      g.className = "scene-ghost wander";
-      // anchor the wander band around the deadline-driven x, with vertical lane per ghost
-      g.style.setProperty("--anchor-x", `${baseX}%`);
-      g.style.setProperty("--lane-y", `${12 + (idx % 3) * 20}%`);
-      g.style.setProperty("--rx", `${7 + (idx % 3) * 3}%`);   // horizontal roam radius
-      g.style.setProperty("--ry", `${6 + (idx % 2) * 4}%`);   // vertical roam radius
-      g.style.setProperty("--dur", `${11 + (idx % 5) * 2.5}s`); // each ghost its own speed
-      g.style.setProperty("--delay", `${idx * -2.3}s`);
+      g.className = "scene-ghost sweep";
+      // lanes: 38%, 54%, 70% of height — below the moon (which sits top-left ~20%)
+      const lane = 38 + (idx % 3) * 16;
+      g.style.setProperty("--lane-y", `${lane}%`);
+      // nearer deadline -> faster sweep (16s far ... 7s near) and larger scale
+      const speed = (7 + 9 * dist).toFixed(1);
+      g.style.setProperty("--sweep-dur", `${speed}s`);
+      g.style.setProperty("--delay", `${idx * -4}s`);
+      g.style.setProperty("--scale", (0.8 + 0.4 * (1 - dist)).toFixed(2));
       g.style.opacity = String(0.6 + 0.4 * (1 - dist));
-      // pick one of 4 wander paths so ghosts cross over the whole scene, not one spot
-      g.classList.add(`path-${idx % 4}`);
       const mood = dist; // far = calm
       g.innerHTML = ghostSVG(task.ghostVariant, mood);
       const label = document.createElement("div");
@@ -465,16 +452,15 @@ export function createUI(ctx) {
     });
 
     const running = snap && !snap.paused;
-    el.timerStart.textContent = snap ? (snap.paused ? "Resume" : "Brewing…") : "Begin the brew";
+    el.timerStart.textContent = snap ? (snap.paused ? "Resume" : "Running…") : "Start";
     el.timerStart.disabled = running;
     el.timerPause.disabled = !running;
     el.timerReset.disabled = !snap;
-    if (el.cauldron) el.cauldron.classList.toggle("brewing", Boolean(running));
     el.timerStatus.textContent = snap
       ? snap.paused
-        ? "The brew rests — stir it again whenever."
-        : "The cauldron bubbles. One small step at a time."
-      : "25 minutes of witching-hour focus.";
+        ? "Paused — pick it up whenever."
+        : "Focusing. One small step at a time."
+      : "25 minutes of gentle focus.";
   }
 
   // ---------- shelter ----------
@@ -661,17 +647,81 @@ export function createUI(ctx) {
     showToast(`A new ghost named ${GHOST_NAMES[task.ghostVariant]} appears at the tree line.`);
   });
 
+  // The "Overwhelmed today" button plays a little hard-to-catch, as a gentle gut-check:
+  // are you truly overwhelmed, or just dodging the work? You must catch it 5 times. Each
+  // catch nudges a reflective question; the 5th opens the greenhouse. If you've already
+  // sheltered, it opens directly (no chase when you genuinely need it back).
+  const CHASE_TARGET = 5;
+  let chaseCount = 0;
+  let chasing = false;
+  const CHASE_PROMPTS = [
+    "Wait — are you truly overwhelmed, or just avoiding the first step? Catch me again.",
+    "Take a breath. Is it the whole task that's heavy, or one scary part? Once more.",
+    "Could one tiny step feel better than hiding? Still here? Catch me.",
+    "Almost. If you rested, what's the ONE thing you'd face tomorrow? Once more.",
+    "Okay. You meant it. The greenhouse is open. 🌿",
+  ];
+
+  function dodge() {
+    const btn = el.overwhelmedBtn;
+    // jump to a random spot within the viewport, fixed-position, away from the cursor
+    if (getComputedStyle(btn).position !== "fixed") {
+      btn.classList.add("dodging");
+    }
+    const pad = 20;
+    const w = btn.offsetWidth || 160;
+    const h = btn.offsetHeight || 44;
+    const maxX = window.innerWidth - w - pad;
+    const maxY = window.innerHeight - h - pad;
+    const x = Math.max(pad, Math.round(Math.random() * maxX));
+    const y = Math.max(pad, Math.round(Math.random() * (maxY - 60)) + 60);
+    btn.style.left = `${x}px`;
+    btn.style.top = `${y}px`;
+  }
+
+  function resetChase() {
+    chasing = false;
+    chaseCount = 0;
+    el.overwhelmedBtn.classList.remove("dodging");
+    el.overwhelmedBtn.style.left = "";
+    el.overwhelmedBtn.style.top = "";
+    el.overwhelmedBtn.textContent = "Overwhelmed today";
+  }
+
+  // dodge when the pointer gets near it, mid-chase
+  el.overwhelmedBtn.addEventListener("mouseenter", () => {
+    if (chasing && chaseCount < CHASE_TARGET - 1) dodge();
+  });
+
   el.overwhelmedBtn.addEventListener("click", () => {
     const s = ctx.getState();
     if (isSheltered(s.shelter, Date.now())) {
-      // already sheltered — just surface the overlay
-      renderShelter();
+      renderShelter(); // already sheltered — no chase
       return;
     }
-    commit((st) => {
-      st.shelter = enterShelter(Date.now());
-      return st;
-    });
+    if (!chasing) {
+      // start the chase
+      chasing = true;
+      chaseCount = 1;
+      showToast(CHASE_PROMPTS[0], null, null, 4500);
+      el.overwhelmedBtn.textContent = `Catch me… (${chaseCount}/${CHASE_TARGET})`;
+      dodge();
+      return;
+    }
+    // a successful catch
+    chaseCount += 1;
+    if (chaseCount >= CHASE_TARGET) {
+      showToast(CHASE_PROMPTS[CHASE_TARGET - 1], null, null, 3500);
+      resetChase();
+      commit((st) => {
+        st.shelter = enterShelter(Date.now());
+        return st;
+      });
+      return;
+    }
+    showToast(CHASE_PROMPTS[chaseCount - 1], null, null, 4500);
+    el.overwhelmedBtn.textContent = `Catch me… (${chaseCount}/${CHASE_TARGET})`;
+    dodge();
   });
 
   el.timerStart.addEventListener("click", () => {
