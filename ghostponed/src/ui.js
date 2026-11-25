@@ -34,6 +34,9 @@ import {
   greenhouseSVG,
   witchSVG,
   spiritParticleSVG,
+  cemeterySVG,
+  batSVG,
+  leafSVG,
 } from "./art.js";
 
 const GHOST_NAMES = ["Mope", "Flicker", "Drift"];
@@ -56,6 +59,9 @@ export function createUI(ctx) {
     timerPause: document.getElementById("timer-pause"),
     timerReset: document.getElementById("timer-reset"),
     timerStatus: document.getElementById("timer-status"),
+    ambient: document.getElementById("ambient"),
+    handMin: document.getElementById("clock-hand-min"),
+    handSec: document.getElementById("clock-hand-sec"),
     toast: document.getElementById("toast"),
   };
 
@@ -113,7 +119,75 @@ export function createUI(ctx) {
     el.toast.innerHTML = "";
   }
 
-  // ---------- scene ----------
+  // ---------- ambient world (built once; independent of task re-renders) ----------
+  // Random floating creatures spanning the WHOLE viewport, for immersion: spirits rising,
+  // bats flapping across, leaves tumbling down, fireflies blinking.
+  function buildAmbient() {
+    if (!el.ambient) return;
+    el.ambient.innerHTML = "";
+    const rnd = (a, b) => a + Math.random() * (b - a);
+
+    // rising spirit wisps
+    for (let i = 0; i < 7; i++) {
+      const p = document.createElement("div");
+      p.className = "amb-spirit";
+      p.style.left = `${rnd(2, 96)}%`;
+      p.style.setProperty("--dur", `${rnd(10, 20).toFixed(1)}s`);
+      p.style.setProperty("--delay", `${(-rnd(0, 14)).toFixed(1)}s`);
+      p.style.setProperty("--drift", `${rnd(-40, 40).toFixed(0)}px`);
+      p.style.setProperty("--size", `${rnd(14, 28).toFixed(0)}px`);
+      p.innerHTML = spiritParticleSVG();
+      el.ambient.appendChild(p);
+    }
+    // bats crossing at various heights
+    for (let i = 0; i < 5; i++) {
+      const b = document.createElement("div");
+      b.className = "amb-bat";
+      b.style.top = `${rnd(6, 60)}%`;
+      b.style.setProperty("--dur", `${rnd(9, 18).toFixed(1)}s`);
+      b.style.setProperty("--delay", `${(-rnd(0, 12)).toFixed(1)}s`);
+      b.style.setProperty("--dir", i % 2 ? "1" : "-1");
+      b.innerHTML = batSVG();
+      el.ambient.appendChild(b);
+    }
+    // tumbling leaves
+    for (let i = 0; i < 9; i++) {
+      const lf = document.createElement("div");
+      lf.className = "amb-leaf";
+      lf.style.left = `${rnd(0, 100)}%`;
+      lf.style.setProperty("--dur", `${rnd(8, 16).toFixed(1)}s`);
+      lf.style.setProperty("--delay", `${(-rnd(0, 12)).toFixed(1)}s`);
+      lf.style.setProperty("--sway", `${rnd(20, 70).toFixed(0)}px`);
+      lf.innerHTML = leafSVG();
+      el.ambient.appendChild(lf);
+    }
+    // blinking fireflies
+    for (let i = 0; i < 12; i++) {
+      const f = document.createElement("div");
+      f.className = "amb-firefly";
+      f.style.left = `${rnd(0, 100)}%`;
+      f.style.top = `${rnd(30, 92)}%`;
+      f.style.setProperty("--dur", `${rnd(2.5, 6).toFixed(1)}s`);
+      f.style.setProperty("--delay", `${(-rnd(0, 5)).toFixed(1)}s`);
+      el.ambient.appendChild(f);
+    }
+    // ambient ghosts — always drifting across the whole screen, dim (background crowd).
+    // Task-linked ghosts (brighter/highlighted) are drawn separately in the scene.
+    for (let i = 0; i < 6; i++) {
+      const g = document.createElement("div");
+      g.className = "amb-ghost";
+      g.style.setProperty("--lane-y", `${rnd(8, 84).toFixed(0)}%`);
+      g.style.setProperty("--dur", `${rnd(16, 30).toFixed(1)}s`);
+      g.style.setProperty("--delay", `${(-rnd(0, 20)).toFixed(1)}s`);
+      g.style.setProperty("--amp", `${rnd(14, 34).toFixed(0)}px`);
+      g.style.setProperty("--scale", rnd(0.4, 0.75).toFixed(2));
+      g.style.setProperty("--dir", i % 2 ? "reverse" : "normal");
+      g.innerHTML = ghostSVG(i % 3, 1);
+      el.ambient.appendChild(g);
+    }
+  }
+
+  // ---------- scene (cemetery + house + moon + ghosts) ----------
   function renderScene() {
     const s = ctx.getState();
     const now = ctx.now();
@@ -121,49 +195,35 @@ export function createUI(ctx) {
 
     el.scene.innerHTML = "";
 
-    // atmosphere layers
     const sky = document.createElement("div");
     sky.className = "scene-sky";
     el.scene.appendChild(sky);
 
     const activeTasks = s.tasks.filter((t) => !t.completed);
-    const totalDone = activeTasks.reduce((acc, t) => acc + progress(t).done, 0);
 
-    // moon: full-ish normally, a thin "new moon" crescent in the empty state
+    // moon — full disc normally, thin crescent ("new moon") when nothing is haunting you
     const moon = document.createElement("div");
     moon.className = activeTasks.length === 0 ? "scene-moon new-moon" : "scene-moon";
     el.scene.appendChild(moon);
 
-    const trees = document.createElement("div");
-    trees.className = "scene-trees";
-    el.scene.appendChild(trees);
-
-    // drifting fog / mist
+    // drifting fog bands
     const fog = document.createElement("div");
     fog.className = "scene-fog";
     el.scene.appendChild(fog);
 
-    // floating spirit particles for ambient motion
-    const particles = document.createElement("div");
-    particles.className = "scene-particles";
-    for (let i = 0; i < 6; i++) {
-      const p = document.createElement("div");
-      p.className = "spirit-particle";
-      p.style.left = `${8 + i * 15}%`;
-      p.style.setProperty("--delay", `${i * 1.7}s`);
-      p.style.setProperty("--dur", `${9 + (i % 4) * 2}s`);
-      p.innerHTML = spiritParticleSVG();
-      particles.appendChild(p);
-    }
-    el.scene.appendChild(particles);
-
-    // haunted house (right side)
+    // haunted house, set back behind the graveyard
     const house = document.createElement("div");
     house.className = "scene-house";
     house.innerHTML = houseSVG();
     el.scene.appendChild(house);
 
-    // EMPTY STATE: a witch flies across the new moon, continuously.
+    // cemetery foreground (tombstones, dead tree, fence) across the bottom
+    const cem = document.createElement("div");
+    cem.className = "scene-cemetery";
+    cem.innerHTML = cemeterySVG();
+    el.scene.appendChild(cem);
+
+    // EMPTY STATE: a witch flies across the moon, continuously.
     if (activeTasks.length === 0) {
       const witch = document.createElement("div");
       witch.className = "scene-witch";
@@ -172,33 +232,33 @@ export function createUI(ctx) {
 
       const hint = document.createElement("div");
       hint.className = "scene-empty-hint";
-      hint.textContent = "A quiet, haunted night. Add a task to call forth its ghost.";
+      hint.textContent =
+        "Little spirits drift by. Summon a task and its ghost glows bright.";
       el.scene.appendChild(hint);
 
-      if (sheltered) el.scene.classList.add("sheltered");
-      else el.scene.classList.remove("sheltered");
+      el.scene.classList.toggle("sheltered", sheltered);
       return;
     }
 
-    // ghosts (bigger, surreal) — each drifts continuously all the way across the window,
-    // left to right, then loops. Deadline distance sets the SPEED (closer deadline = the
-    // ghost sweeps faster and looms larger) and opacity, keeping the task mechanic alive.
-    // Vertical lanes sit well below the moon so nothing collides with it.
+    // task ghosts drift the WHOLE screen (always moving) and are HIGHLIGHTED — brighter
+    // and glowing — so they stand out from the dim ambient ghost crowd behind them.
     activeTasks.forEach((task, idx) => {
       const dist = sheltered ? Math.max(0.5, distance(task, now)) : distance(task, now);
       const g = document.createElement("div");
-      g.className = "scene-ghost sweep";
-      // lanes: 38%, 54%, 70% of height — below the moon (which sits top-left ~20%)
-      const lane = 38 + (idx % 3) * 16;
+      g.className = "scene-ghost sweep highlighted";
+      // lanes spread 10%..82% of the full height so ghosts roam top to bottom
+      const lanes = [12, 30, 48, 66, 80];
+      const lane = lanes[idx % lanes.length];
       g.style.setProperty("--lane-y", `${lane}%`);
-      // nearer deadline -> faster sweep (16s far ... 7s near) and larger scale
-      const speed = (7 + 9 * dist).toFixed(1);
+      g.style.setProperty("--amp", `${18 + (idx % 3) * 10}px`); // vertical wobble range
+      // nearer deadline -> faster sweep (18s far ... 8s near) and larger
+      const speed = (8 + 10 * dist).toFixed(1);
       g.style.setProperty("--sweep-dur", `${speed}s`);
-      g.style.setProperty("--delay", `${idx * -4}s`);
-      g.style.setProperty("--scale", (0.8 + 0.4 * (1 - dist)).toFixed(2));
+      g.style.setProperty("--delay", `${idx * -3.5}s`);
+      g.style.setProperty("--scale", (0.85 + 0.5 * (1 - dist)).toFixed(2));
+      g.style.setProperty("--dir", idx % 2 ? "reverse" : "normal");
       g.style.opacity = String(0.6 + 0.4 * (1 - dist));
-      const mood = dist; // far = calm
-      g.innerHTML = ghostSVG(task.ghostVariant, mood);
+      g.innerHTML = ghostSVG(task.ghostVariant, dist);
       const label = document.createElement("div");
       label.className = "ghost-label";
       label.textContent = `${GHOST_NAMES[task.ghostVariant] || "Ghost"} · ${task.title}`;
@@ -207,12 +267,7 @@ export function createUI(ctx) {
       el.scene.appendChild(g);
     });
 
-    // shelter overlay
-    if (sheltered) {
-      el.scene.classList.add("sheltered");
-    } else {
-      el.scene.classList.remove("sheltered");
-    }
+    el.scene.classList.toggle("sheltered", sheltered);
   }
 
   // ---------- tasks ----------
@@ -433,6 +488,13 @@ export function createUI(ctx) {
     const snap = s.timer;
     const rem = snap ? remaining(snap) : DEFAULT_DURATION_MS;
     el.timerClock.textContent = formatClock(rem);
+
+    // drive the analog clock hands from the remaining time
+    const totalSec = Math.max(0, Math.round(rem / 1000));
+    const mins = totalSec / 60;
+    const secs = totalSec % 60;
+    if (el.handMin) el.handMin.style.transform = `rotate(${(mins % 60) * 6}deg)`;
+    if (el.handSec) el.handSec.style.transform = `rotate(${secs * 6}deg)`;
 
     // populate task select
     const active = s.tasks.filter((t) => !t.completed);
@@ -786,5 +848,5 @@ export function createUI(ctx) {
     showToast("Focus session done. Proud of you — take a breath. 🌙", null, null, 7000);
   }
 
-  return { renderAll, renderTimer, renderScene, onTimerComplete };
+  return { renderAll, renderTimer, renderScene, onTimerComplete, buildAmbient };
 }

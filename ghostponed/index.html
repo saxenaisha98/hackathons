@@ -3,10 +3,15 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Ghostponed 🌙 — cozy spooky to-dos</title>
+    <title>Ghostponed 🌙 — a haunted to-do</title>
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
+    <!-- full-screen living cemetery scene, behind everything -->
+    <div id="scene" class="scene" aria-hidden="true"></div>
+    <!-- drifting creatures/particles span the whole viewport -->
+    <div id="ambient" class="ambient" aria-hidden="true"></div>
+
     <header class="app-header">
       <div class="brand">
         <h1>Ghostponed</h1>
@@ -16,32 +21,39 @@
     </header>
 
     <main>
-      <section id="scene" class="scene" aria-label="Your garden at night"></section>
+      <section class="panel tasks-panel">
+        <h2>Your hauntings</h2>
+        <form id="task-form" class="task-form" autocomplete="off">
+          <input id="task-title" type="text" placeholder="What's haunting your to-do list?" maxlength="80" />
+          <input id="task-deadline" type="date" aria-label="Deadline" />
+          <button type="submit" class="primary-btn">Summon</button>
+        </form>
+        <p id="task-error" class="form-error" role="alert"></p>
+        <div id="task-list" class="task-list"></div>
+      </section>
 
-      <div class="panels">
-        <section class="panel tasks-panel">
-          <h2>Tasks &amp; milestones</h2>
-          <form id="task-form" class="task-form" autocomplete="off">
-            <input id="task-title" type="text" placeholder="What's haunting your to-do list?" maxlength="80" />
-            <input id="task-deadline" type="date" aria-label="Deadline" />
-            <button type="submit" class="primary-btn">Add task</button>
-          </form>
-          <p id="task-error" class="form-error" role="alert"></p>
-          <div id="task-list" class="task-list"></div>
-        </section>
-
-        <section class="panel timer-panel">
-          <h2>Focus timer</h2>
-          <div id="timer-clock" class="timer-clock">25:00</div>
-          <select id="timer-task" class="timer-task" aria-label="Focus on which task"></select>
-          <div class="timer-controls">
-            <button id="timer-start" class="primary-btn">Start</button>
-            <button id="timer-pause" class="ghost-btn" disabled>Pause</button>
-            <button id="timer-reset" class="link-btn" disabled>Reset</button>
+      <section class="panel timer-panel">
+        <h2>Witching-hour focus</h2>
+        <div class="clock" aria-hidden="true">
+          <div class="clock-face">
+            <div class="clock-tick t12"></div>
+            <div class="clock-tick t3"></div>
+            <div class="clock-tick t6"></div>
+            <div class="clock-tick t9"></div>
+            <div id="clock-hand-min" class="clock-hand hand-min"></div>
+            <div id="clock-hand-sec" class="clock-hand hand-sec"></div>
+            <div class="clock-center"></div>
           </div>
-          <p id="timer-status" class="timer-status">25 minutes of gentle focus.</p>
-        </section>
-      </div>
+          <div id="timer-clock" class="timer-clock">25:00</div>
+        </div>
+        <select id="timer-task" class="timer-task" aria-label="Focus on which task"></select>
+        <div class="timer-controls">
+          <button id="timer-start" class="primary-btn">Start</button>
+          <button id="timer-pause" class="ghost-btn" disabled>Pause</button>
+          <button id="timer-reset" class="link-btn" disabled>Reset</button>
+        </div>
+        <p id="timer-status" class="timer-status">25 minutes of gentle focus.</p>
+      </section>
     </main>
 
     <div id="shelter-overlay" class="shelter-overlay" role="dialog" aria-modal="true"></div>
