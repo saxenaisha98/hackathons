@@ -218,3 +218,40 @@ export function leafSVG() {
     <line x1="8" y1="2" x2="8" y2="14" stroke="#2b1b40" stroke-width="0.6"/>
   </svg>`;
 }
+
+// A spooky analog pocket-clock. Hands are given ids so the UI can rotate them.
+// viewBox is 120x120 with the center at (60,60).
+export function clockSVG() {
+  // hour pips around the dial
+  const pips = Array.from({ length: 12 })
+    .map((_, i) => {
+      const a = (i * 30 * Math.PI) / 180;
+      const r1 = 48, r2 = i % 3 === 0 ? 40 : 44;
+      const x1 = 60 + r1 * Math.sin(a), y1 = 60 - r1 * Math.cos(a);
+      const x2 = 60 + r2 * Math.sin(a), y2 = 60 - r2 * Math.cos(a);
+      const w = i % 3 === 0 ? 3 : 1.6;
+      return `<line x1="${x1.toFixed(1)}" y1="${y1.toFixed(1)}" x2="${x2.toFixed(1)}" y2="${y2.toFixed(1)}" stroke="#b9a6dd" stroke-width="${w}" stroke-linecap="round" opacity="0.8"/>`;
+    })
+    .join("");
+  return `
+  <svg viewBox="0 0 120 120" class="clock-svg" aria-hidden="true">
+    <defs>
+      <radialGradient id="dial" cx="50%" cy="42%" r="62%">
+        <stop offset="0%" stop-color="#241640"/>
+        <stop offset="78%" stop-color="#120a26"/>
+        <stop offset="100%" stop-color="#0b0618"/>
+      </radialGradient>
+    </defs>
+    <!-- outer glow ring + bezel -->
+    <circle cx="60" cy="60" r="56" fill="none" stroke="#6d28d9" stroke-width="4"/>
+    <circle cx="60" cy="60" r="52" fill="url(#dial)" stroke="#8b5cf6" stroke-width="1.5"/>
+    <!-- little hanging ring on top -->
+    <circle cx="60" cy="6" r="4.5" fill="none" stroke="#8b5cf6" stroke-width="3"/>
+    ${pips}
+    <!-- hands rotate around the clock center (60,60); the UI sets the angle -->
+    <line id="clock-hand-min" x1="60" y1="62" x2="60" y2="30" stroke="#f4a9c4" stroke-width="4" stroke-linecap="round"/>
+    <line id="clock-hand-sec" x1="60" y1="64" x2="60" y2="22" stroke="#8b5cf6" stroke-width="2" stroke-linecap="round"/>
+    <circle cx="60" cy="60" r="4" fill="#f6c45a"/>
+    <circle cx="60" cy="60" r="4" fill="none" stroke="#fff" stroke-width="0.6" opacity="0.5"/>
+  </svg>`;
+}

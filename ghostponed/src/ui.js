@@ -37,6 +37,7 @@ import {
   cemeterySVG,
   batSVG,
   leafSVG,
+  clockSVG,
 } from "./art.js";
 
 const GHOST_NAMES = ["Mope", "Flicker", "Drift"];
@@ -60,10 +61,14 @@ export function createUI(ctx) {
     timerReset: document.getElementById("timer-reset"),
     timerStatus: document.getElementById("timer-status"),
     ambient: document.getElementById("ambient"),
-    handMin: document.getElementById("clock-hand-min"),
-    handSec: document.getElementById("clock-hand-sec"),
+    clockMount: document.getElementById("clock-mount"),
     toast: document.getElementById("toast"),
   };
+
+  // mount the analog clock once, then cache its hand elements
+  if (el.clockMount) el.clockMount.innerHTML = clockSVG();
+  el.handMin = document.getElementById("clock-hand-min");
+  el.handSec = document.getElementById("clock-hand-sec");
 
   let undoTimer = null;
 
@@ -489,12 +494,12 @@ export function createUI(ctx) {
     const rem = snap ? remaining(snap) : DEFAULT_DURATION_MS;
     el.timerClock.textContent = formatClock(rem);
 
-    // drive the analog clock hands from the remaining time
+    // drive the analog clock hands from the remaining time (rotate around center 60,60)
     const totalSec = Math.max(0, Math.round(rem / 1000));
     const mins = totalSec / 60;
     const secs = totalSec % 60;
-    if (el.handMin) el.handMin.style.transform = `rotate(${(mins % 60) * 6}deg)`;
-    if (el.handSec) el.handSec.style.transform = `rotate(${secs * 6}deg)`;
+    if (el.handMin) el.handMin.setAttribute("transform", `rotate(${(mins % 60) * 6} 60 60)`);
+    if (el.handSec) el.handSec.setAttribute("transform", `rotate(${secs * 6} 60 60)`);
 
     // populate task select
     const active = s.tasks.filter((t) => !t.completed);
@@ -709,34 +714,51 @@ export function createUI(ctx) {
     showToast(`A new ghost named ${GHOST_NAMES[task.ghostVariant]} appears at the tree line.`);
   });
 
-  // The "Overwhelmed today" button plays a little hard-to-catch, as a gentle gut-check:
-  // are you truly overwhelmed, or just dodging the work? You must catch it 5 times. Each
-  // catch nudges a reflective question; the 5th opens the greenhouse. If you've already
-  // sheltered, it opens directly (no chase when you genuinely need it back).
+  // "Overwhelmed today" is a gentle, MAGICAL gut-check: the button becomes a drifting
+  // will-o'-wisp you coax 5 times (not a frantic viewport-wide chase). It floats a short,
+  // smooth distance each time, leaving a sparkle, and asks a soft reflective question —
+  // "truly overwhelmed, or procrastinating?" The 5th catch opens the greenhouse. If you're
+  // already sheltered, it opens directly, no coaxing.
   const CHASE_TARGET = 5;
   let chaseCount = 0;
   let chasing = false;
   const CHASE_PROMPTS = [
-    "Wait — are you truly overwhelmed, or just avoiding the first step? Catch me again.",
-    "Take a breath. Is it the whole task that's heavy, or one scary part? Once more.",
-    "Could one tiny step feel better than hiding? Still here? Catch me.",
-    "Almost. If you rested, what's the ONE thing you'd face tomorrow? Once more.",
-    "Okay. You meant it. The greenhouse is open. 🌿",
+    "Shhh… are you truly overwhelmed, or just avoiding the first step? Follow me…",
+    "Breathe. Is it the whole task that's heavy, or one small scary part? Come closer…",
+    "Might one tiny step feel lighter than hiding? Still with me?",
+    "Almost there. If you rested, what's the ONE thing you'd face tomorrow?",
+    "You truly meant it. The greenhouse opens for you. 🌿",
   ];
 
-  function dodge() {
+  function sparkleAt(x, y) {
+    const s = document.createElement("div");
+    s.className = "wisp-spark";
+    s.style.left = `${x}px`;
+    s.style.top = `${y}px`;
+    document.body.appendChild(s);
+    setTimeout(() => s.remove(), 700);
+  }
+
+  // drift the wisp a SHORT, smooth distance from its current spot, staying near the top.
+  function driftWisp() {
     const btn = el.overwhelmedBtn;
-    // jump to a random spot within the viewport, fixed-position, away from the cursor
-    if (getComputedStyle(btn).position !== "fixed") {
-      btn.classList.add("dodging");
+    if (!btn.classList.contains("wisping")) {
+      // anchor it at its current on-screen position, then switch to fixed floating
+      const r = btn.getBoundingClientRect();
+      btn.classList.add("wisping");
+      btn.style.left = `${r.left}px`;
+      btn.style.top = `${r.top}px`;
     }
-    const pad = 20;
-    const w = btn.offsetWidth || 160;
-    const h = btn.offsetHeight || 44;
-    const maxX = window.innerWidth - w - pad;
-    const maxY = window.innerHeight - h - pad;
-    const x = Math.max(pad, Math.round(Math.random() * maxX));
-    const y = Math.max(pad, Math.round(Math.random() * (maxY - 60)) + 60);
+    const r = btn.getBoundingClientRect();
+    sparkleAt(r.left + r.width / 2, r.top + r.height / 2);
+    // small random hop: 90–180px, biased to stay in the upper third of the screen
+    const ang = Math.random() * Math.PI * 2;
+    const dapp = 90 + Math.random() * 90;
+    const pad = 16;
+    let x = r.left + Math.cos(ang) * dapp;
+    let y = r.top + Math.sin(ang) * dapp;
+    x = Math.max(pad, Math.min(window.innerWidth - r.width - pad, x));
+    y = Math.max(pad, Math.min(Math.max(140, window.innerHeight * 0.4), y));
     btn.style.left = `${x}px`;
     btn.style.top = `${y}px`;
   }
@@ -744,35 +766,36 @@ export function createUI(ctx) {
   function resetChase() {
     chasing = false;
     chaseCount = 0;
-    el.overwhelmedBtn.classList.remove("dodging");
-    el.overwhelmedBtn.style.left = "";
-    el.overwhelmedBtn.style.top = "";
-    el.overwhelmedBtn.textContent = "Overwhelmed today";
+    const btn = el.overwhelmedBtn;
+    btn.classList.remove("wisping");
+    btn.style.left = "";
+    btn.style.top = "";
+    btn.textContent = "Overwhelmed today";
   }
 
-  // dodge when the pointer gets near it, mid-chase
+  // float away softly when the pointer approaches, mid-coax
   el.overwhelmedBtn.addEventListener("mouseenter", () => {
-    if (chasing && chaseCount < CHASE_TARGET - 1) dodge();
+    if (chasing && chaseCount < CHASE_TARGET - 1) driftWisp();
   });
 
   el.overwhelmedBtn.addEventListener("click", () => {
     const s = ctx.getState();
     if (isSheltered(s.shelter, Date.now())) {
-      renderShelter(); // already sheltered — no chase
+      renderShelter(); // already sheltered — no coaxing
       return;
     }
     if (!chasing) {
-      // start the chase
       chasing = true;
       chaseCount = 1;
       showToast(CHASE_PROMPTS[0], null, null, 4500);
-      el.overwhelmedBtn.textContent = `Catch me… (${chaseCount}/${CHASE_TARGET})`;
-      dodge();
+      el.overwhelmedBtn.textContent = `Follow the wisp… (${chaseCount}/${CHASE_TARGET})`;
+      driftWisp();
       return;
     }
-    // a successful catch
     chaseCount += 1;
     if (chaseCount >= CHASE_TARGET) {
+      const r = el.overwhelmedBtn.getBoundingClientRect();
+      sparkleAt(r.left + r.width / 2, r.top + r.height / 2);
       showToast(CHASE_PROMPTS[CHASE_TARGET - 1], null, null, 3500);
       resetChase();
       commit((st) => {
@@ -782,8 +805,8 @@ export function createUI(ctx) {
       return;
     }
     showToast(CHASE_PROMPTS[chaseCount - 1], null, null, 4500);
-    el.overwhelmedBtn.textContent = `Catch me… (${chaseCount}/${CHASE_TARGET})`;
-    dodge();
+    el.overwhelmedBtn.textContent = `Follow the wisp… (${chaseCount}/${CHASE_TARGET})`;
+    driftWisp();
   });
 
   el.timerStart.addEventListener("click", () => {
